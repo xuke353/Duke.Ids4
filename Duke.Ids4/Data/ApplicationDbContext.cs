@@ -1,4 +1,5 @@
 ﻿using Duke.Ids4.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -8,7 +9,14 @@ using System.Threading.Tasks;
 
 namespace Duke.Ids4.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, int>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser,
+                                                            ApplicationRole,
+                                                            int,
+                                                            IdentityUserClaim<int>,
+                                                            ApplicationUserRole,
+                                                            IdentityUserLogin<int>,
+                                                            IdentityRoleClaim<int>,
+                                                            IdentityUserToken<int>>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
