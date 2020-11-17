@@ -1,4 +1,5 @@
 ﻿using Duke.Ids4.Models;
+using IdentityServer4.EntityFramework.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -9,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace Duke.Ids4.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser,
-                                                            ApplicationRole,
+    public class ApplicationDbContext : IdentityDbContext<User,
+                                                            Role,
                                                             int,
                                                             IdentityUserClaim<int>,
-                                                            ApplicationUserRole,
+                                                            IdentityUserRole<int>,
                                                             IdentityUserLogin<int>,
                                                             IdentityRoleClaim<int>,
                                                             IdentityUserToken<int>>
@@ -22,7 +23,6 @@ namespace Duke.Ids4.Data
             : base(options)
         {
         }
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

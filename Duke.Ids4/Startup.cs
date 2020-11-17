@@ -35,7 +35,7 @@ namespace Duke.Ids4
 
             services.AddDbContext<ApplicationDbContext>(option => option.UseMySql(connectionString));
 
-            services.AddIdentity<ApplicationUser, ApplicationRole>()
+            services.AddIdentity<User, Role>()
                .AddEntityFrameworkStores<ApplicationDbContext>()
                .AddDefaultTokenProviders();
 
@@ -63,7 +63,7 @@ namespace Duke.Ids4
                         sql => sql.MigrationsAssembly(migrationsAssembly));
                   options.EnableTokenCleanup = true;
               })
-              .AddAspNetIdentity<ApplicationUser>();
+              .AddAspNetIdentity<User>();
 
             if (Environment.IsDevelopment())
             {
