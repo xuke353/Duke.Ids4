@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using System.IO;
 using System.Reflection;
@@ -19,6 +20,7 @@ namespace Duke.Ids4
     {
         public IConfiguration Configuration { get; }
         public IWebHostEnvironment Environment { get; }
+        public static readonly ILoggerFactory EFLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 
         public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
@@ -33,7 +35,11 @@ namespace Duke.Ids4
 
             services.AddControllersWithViews();
 
-            services.AddDbContext<ApplicationDbContext>(option => option.UseMySql(connectionString));
+            services.AddDbContext<ApplicationDbContext>(option =>
+            option.UseMySql(connectionString)
+            //打印sql
+            .UseLoggerFactory(EFLoggerFactory)
+            .EnableSensitiveDataLogging(true));
 
             services.AddIdentity<User, Role>()
                .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -89,13 +95,13 @@ namespace Duke.Ids4
             });
         }
 
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, ILogger<Startup> logger)
         {
             if (Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.InitializeDatabase();
+            app.InitializeDatabase(logger);
             app.UseStaticFiles();
             app.UseRouting();
             app.UseCors("default");

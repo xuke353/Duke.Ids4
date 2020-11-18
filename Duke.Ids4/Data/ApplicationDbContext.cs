@@ -14,7 +14,7 @@ namespace Duke.Ids4.Data
                                                             Role,
                                                             int,
                                                             IdentityUserClaim<int>,
-                                                            IdentityUserRole<int>,
+                                                            UserRole,
                                                             IdentityUserLogin<int>,
                                                             IdentityRoleClaim<int>,
                                                             IdentityUserToken<int>>
@@ -23,8 +23,12 @@ namespace Duke.Ids4.Data
             : base(options)
         {
         }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            //builder.Entity<Role>().ToTable("Role");
+            //builder.Entity<User>().ToTable("User");
+            //builder.Entity<UserRole>().ToTable("UserRole");
             base.OnModelCreating(builder);
         }
     }

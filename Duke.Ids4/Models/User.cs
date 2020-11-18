@@ -24,12 +24,12 @@ namespace Duke.Ids4.Models
         public string Name { get; set; }
 
         public Sex Sex { get; set; }
+
         /// <summary>
         /// 密码
         /// </summary>
-        [MaxLength(50)]
-        public string Password { get; set; }
-
+        [StringLength(512)]
+        public override string PasswordHash { get; set; }
 
         /// <summary>
         /// 创建时间
@@ -41,6 +41,13 @@ namespace Duke.Ids4.Models
         /// 最后登录时间
         /// </summary>
         public DateTime? LastLoginTime { get; set; }
+
+        /// <summary>
+        /// 邮箱
+        /// </summary>
+        [ProtectedPersonalData]
+        [StringLength(256)]
+        public override string Email { get; set; }
     }
 
     [JsonConverter(typeof(StringEnumConverter))]
