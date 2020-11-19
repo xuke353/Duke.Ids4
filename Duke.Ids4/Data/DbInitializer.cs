@@ -26,6 +26,7 @@ namespace Duke.Ids4.Data
 
                 var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
                 context.Database.Migrate();
+                var isMigrate = false;
                 if (!context.Clients.Any())
                 {
                     foreach (var client in Config.Clients)
@@ -33,6 +34,7 @@ namespace Duke.Ids4.Data
                         context.Clients.Add(client.ToEntity());
                     }
                     context.SaveChanges();
+                    isMigrate = true;
                 }
 
                 if (!context.IdentityResources.Any())
@@ -42,6 +44,7 @@ namespace Duke.Ids4.Data
                         context.IdentityResources.Add(resource.ToEntity());
                     }
                     context.SaveChanges();
+                    isMigrate = true;
                 }
 
                 if (!context.ApiScopes.Any())
@@ -51,6 +54,7 @@ namespace Duke.Ids4.Data
                         context.ApiScopes.Add(resource.ToEntity());
                     }
                     context.SaveChanges();
+                    isMigrate = true;
                 }
 
                 if (!context.ApiResources.Any())
@@ -60,59 +64,65 @@ namespace Duke.Ids4.Data
                         context.ApiResources.Add(resource.ToEntity());
                     }
                     context.SaveChanges();
+                    isMigrate = true;
                 }
 
                 var appContext = serviceScope.ServiceProvider.GetService<ApplicationDbContext>();
-                appContext.Database.Migrate();
-                if (!appContext.Users.Any())
+                if (appContext.Database.GetPendingMigrations().Any())
                 {
-                    var userMgr = serviceScope.ServiceProvider.GetRequiredService<UserManager<User>>();
-                    var roleMgr = serviceScope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
-
-                    foreach (var user in Config.Users)
+                    appContext.Database.Migrate();
+                    if (!appContext.Users.Any())
                     {
-                        var identityResult = userMgr.CreateAsync(user, "1qazZAQ!").Result;
-                        if (!identityResult.Succeeded)
+                        var userMgr = serviceScope.ServiceProvider.GetRequiredService<UserManager<User>>();
+                        var roleMgr = serviceScope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
+
+                        foreach (var user in Config.Users)
                         {
-                            throw new Exception(identityResult.Errors.First().Description);
-                        }
+                            var identityResult = userMgr.CreateAsync(user, "1qazZAQ!").Result;
+                            if (!identityResult.Succeeded)
+                            {
+                                throw new Exception(identityResult.Errors.First().Description);
+                            }
 
-                        var roles = from r in Config.Roles
-                                    join ur in Config.UserRoles
-                                    on r.Id equals ur.RoleId
-                                    where ur.UserId == user.Id
-                                    select r;
+                            var roles = from r in Config.Roles
+                                        join ur in Config.UserRoles
+                                        on r.Id equals ur.RoleId
+                                        where ur.UserId == user.Id
+                                        select r;
 
-                        var claims = new List<Claim>{
+                            var claims = new List<Claim>{
                                     new Claim(JwtClaimTypes.Name, user.Name),
                                     new Claim(JwtClaimTypes.Email, user.Email),
                                     new Claim(JwtClaimTypes.Subject, user.Id.ToString()),
                                 };
-                        claims.AddRange(roles.Select(s => new Claim(JwtClaimTypes.Role, s.Id.ToString())));
-                        identityResult = userMgr.AddClaimsAsync(user, claims).Result;
-                        if (!identityResult.Succeeded)
-                        {
-                            throw new Exception(identityResult.Errors.First().Description);
+                            claims.AddRange(roles.Select(s => new Claim(JwtClaimTypes.Role, s.Id.ToString())));
+                            identityResult = userMgr.AddClaimsAsync(user, claims).Result;
+                            if (!identityResult.Succeeded)
+                            {
+                                throw new Exception(identityResult.Errors.First().Description);
+                            }
                         }
-                    }
 
-                    foreach (var role in Config.Roles)
-                    {
-                        var identityResult1 = roleMgr.CreateAsync(role).Result;
-                        if (!identityResult1.Succeeded)
+                        foreach (var role in Config.Roles)
                         {
-                            throw new Exception(identityResult1.Errors.First().Description);
+                            var identityResult1 = roleMgr.CreateAsync(role).Result;
+                            if (!identityResult1.Succeeded)
+                            {
+                                throw new Exception(identityResult1.Errors.First().Description);
+                            }
                         }
-                    }
 
-                    foreach (var ur in Config.UserRoles)
-                    {
-                        appContext.UserRoles.Add(ur);
-                    }
+                        foreach (var ur in Config.UserRoles)
+                        {
+                            appContext.UserRoles.Add(ur);
+                        }
 
-                    appContext.SaveChanges();
+                        appContext.SaveChanges();
+                        isMigrate = true;
+                    }
                 }
-                logger.LogInformation("Done seeding database");
+
+                logger.LogInformation(isMigrate ? "Done seeding database" : "No data to migrate");
             }
         }
     }
